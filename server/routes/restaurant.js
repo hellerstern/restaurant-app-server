@@ -3,7 +3,6 @@ const app = express();
 const _ = require("underscore");
 
 const Restaurant = require("../models/restaurant");
-const User = require("../models/user");
 
 const {
   verificateToken,
@@ -100,10 +99,21 @@ app.post(
   [verificateToken, verificateManage_Role],
   function (req, res) {
     let body = req.body;
+    let owner = body.owner;
+    if (req.user.role == "OWNER_ROLE") {
+      if (req.user.role != owner) {
+        return res.status(500).json({
+          ok: false,
+          err: {
+            message: "You cannot specify another owner",
+          },
+        });
+      }
+    }
     let restaurant = new Restaurant({
       name: body.name,
       description: body.description,
-      owner: req.user._id,
+      owner: body.owner,
     });
     restaurant.save((err, restaurantDB) => {
       if (err) {
@@ -132,11 +142,11 @@ app.put(
     let body = _.pick(req.body, ["name", "description", "image", "status"]);
     // This is a way to not update certain properties
     // But we used underscore .pick instead
-    User.findByIdAndUpdate(
+    Restaurant.findByIdAndUpdate(
       id,
       body,
       { new: true, runValidators: true, context: "query" },
-      (err, userDB) => {
+      (err, restaurantDB) => {
         if (err) {
           return res.status(400).json({
             ok: false,
@@ -145,7 +155,7 @@ app.put(
         }
         res.json({
           ok: true,
-          user: userDB,
+          restaurant: restaurantDB,
         });
       }
     );
