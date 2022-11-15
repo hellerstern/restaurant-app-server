@@ -1,0 +1,32 @@
+{
+  "name": "restaurant-app-server",
+  "version": "1.0.0",
+  "description": "Test assignment restaurant app rest server with node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "keywords": [
+    "Node",
+    "Rest",
+    "Server",
+    "Restaurant"
+  ],
+  "author": "Cool709",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.7.2",
+    "mongoose-unique-validator": "^3.1.0",
+    "path": "^0.12.7",
+    "underscore": "^1.13.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
