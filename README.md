@@ -1,5 +1,5 @@
 # Restaurant App Rest Server
-Restaurant App Backend with Node.js + MongoDB
+Restaurant App Backend with Node.js + MongoDB <br />
 Run `npm install` after getting repository
 
 ## Server Details
