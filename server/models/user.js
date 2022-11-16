@@ -23,7 +23,7 @@ let userSchema = new Schema({
     type: String,
     required: [true, "The password is required"],
   },
-  img: {
+  image: {
     type: String,
     required: false,
   },

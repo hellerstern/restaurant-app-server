@@ -20,7 +20,7 @@ app.get("/user", [verificateToken, verificateAdmin_Role], (req, res) => {
   limit = Number(limit);
 
   // get currently enabled users: represented by status field value true
-  User.find({ status: true }, "name email img role status google")
+  User.find({ status: true })
     .skip(from)
     .limit(limit)
     .exec((err, users) => {
@@ -101,7 +101,7 @@ app.put(
   [verificateToken, verificateAdmin_Role],
   function (req, res) {
     let id = req.params.id;
-    let body = _.pick(req.body, ["name", "email", "img", "role", "status"]);
+    let body = _.pick(req.body, ["name", "email", "image", "role", "status"]);
     // This is a way to not update certain properties
     // But we used underscore .pick instead
     // delete body.password;
