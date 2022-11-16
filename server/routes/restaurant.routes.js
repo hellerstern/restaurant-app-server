@@ -2,13 +2,13 @@ const express = require("express");
 const _ = require("underscore");
 
 const app = express();
-const Restaurant = require("../models/restaurant");
+const Restaurant = require("../models/restaurant.model");
 
 const {
   verificateToken,
   verificateAdmin_Role,
   verificateManage_Role,
-} = require("../middlewares/authentication");
+} = require("../middlewares/authentication.middleware");
 
 // ============================
 //  Get all restaurants

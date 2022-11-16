@@ -3,15 +3,15 @@ const _ = require("underscore");
 
 const app = express();
 
-const Comment = require("../models/comment");
-const Restaurant = require("../models/restaurant");
-const Review = require("../models/review");
+const Comment = require("../models/comment.model");
+const Restaurant = require("../models/restaurant.model");
+const Review = require("../models/review.model");
 
 const {
   verificateToken,
   verificateAdmin_Role,
   verificateManage_Role,
-} = require("../middlewares/authentication");
+} = require("../middlewares/authentication.middleware");
 
 // =============================================================== Comment CRUD
 

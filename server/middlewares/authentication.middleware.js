@@ -73,29 +73,9 @@ let verificateManage_Role = (req, res, next) => {
   }
 };
 
-// ============================
-//  Image Token verification
-// ============================
-let verificateTokenImg = (req, res, next) => {
-  let token = req.query.token;
-  jwt.verify(token, process.env.SEED, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({
-        ok: false,
-        err: {
-          message: "Token not valid",
-        },
-      });
-    }
-    req.user = decoded.user;
-    next();
-  });
-};
-
 module.exports = {
   verificateToken,
   verificateAdmin_Role,
   verificateOwner_Role,
   verificateManage_Role,
-  verificateTokenImg,
 };

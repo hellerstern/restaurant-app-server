@@ -2,13 +2,13 @@ const express = require("express");
 const fileUpload = require("express-fileupload");
 const app = express();
 
-const User = require("../models/user");
-const Restaurant = require("../models/restaurant");
+const User = require("../models/user.model");
+const Restaurant = require("../models/restaurant.model");
 
 const fs = require("fs");
 const path = require("path");
 
-const { verificateToken } = require("../middlewares/authentication");
+const { verificateToken } = require("../middlewares/authentication.middleware");
 
 // default options
 app.use(fileUpload());
