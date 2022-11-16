@@ -25,10 +25,10 @@ let commentSchema = new Schema({
     ref: "User",
     required: [true, "The user who commented is required"],
   },
-  restaurant: {
+  review: {
     type: Schema.Types.ObjectId,
-    ref: "Restaurant",
-    required: [true, "The restaurant which is target is required"],
+    ref: "Review",
+    required: false,
   },
   opened: {
     type: Boolean,

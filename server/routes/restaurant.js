@@ -19,6 +19,26 @@ app.get("/restaurants", verificateToken, function (req, res) {
   Restaurant.find({ status: true })
     .skip(from)
     .limit(5)
+    .populate("owner")
+    .populate([
+      {
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            model: "User",
+          },
+          {
+            path: "review",
+            model: "Review",
+            populate: {
+              path: "owner",
+              model: "User",
+            },
+          },
+        ],
+      },
+    ])
     .exec((err, restaurants) => {
       if (err) {
         return res.status(500).json({
@@ -101,7 +121,7 @@ app.post(
     let body = req.body;
     let owner = body.owner;
     if (req.user.role == "OWNER_ROLE") {
-      if (req.user.role != owner) {
+      if (req.user._id != owner) {
         return res.status(500).json({
           ok: false,
           err: {

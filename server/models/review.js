@@ -12,11 +12,6 @@ let reviewSchema = new Schema({
     ref: "User",
     required: [true, "The owner who reviewed is required"],
   },
-  comment: {
-    type: Schema.Types.ObjectId,
-    ref: "Comment",
-    required: [true, "The comment is required"],
-  },
   status: {
     type: Boolean,
     default: true,

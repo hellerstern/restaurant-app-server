@@ -24,6 +24,8 @@ app.get("/comments", verificateToken, function (req, res) {
   Comment.find({ status: true })
     .skip(from)
     .limit(5)
+    .populate("user")
+    .populate("review")
     .exec((err, comments) => {
       if (err) {
         return res.status(500).json({
@@ -64,36 +66,61 @@ app.post("/comments", [verificateToken], function (req, res) {
     }
   }
 
-  Restaurant.findById(body.restaurant).exec((err, restaurantDB) => {
-    if (err || !restaurantDB) {
-      return res.status(400).json({
-        ok: false,
-        err: {
-          message: "The restaurant doesn't exist with specified id",
-        },
-      });
-    }
-    let comment = new Comment({
-      rate: body.rate,
-      title: body.title,
-      description: body.description,
-      user: body.owner,
-      restaurant: body.restaurant,
-    });
-    comment.save((err, commentDB) => {
-      if (err) {
-        return res.status(500).json({
+  Restaurant.findById(body.restaurant)
+    .populate("comments")
+    .exec((err, restaurantDB) => {
+      if (err || !restaurantDB) {
+        return res.status(400).json({
           ok: false,
-          err,
+          err: {
+            message: "The restaurant doesn't exist with specified id",
+          },
         });
       }
-      res.json({
-        ok: true,
-        comment: commentDB,
-        message: "Comment Created",
+      let found = false;
+      restaurantDB.comments.forEach((comment) => {
+        if (comment.user == owner) {
+          found = true;
+        }
+      });
+      if (found) {
+        return res.status(500).json({
+          ok: false,
+          err: {
+            message: "You already commented to this restaurant",
+          },
+        });
+      }
+      let comment = new Comment({
+        rate: body.rate,
+        title: body.title,
+        description: body.description,
+        user: body.owner,
+      });
+      comment.save((err, commentDB) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            err,
+          });
+        }
+        restaurantDB.comments.push(commentDB._id);
+        restaurantDB.save((err, savedRestaurant) => {
+          if (err) {
+            return res.status(500).json({
+              ok: false,
+              err,
+            });
+          }
+          res.json({
+            ok: true,
+            comment: commentDB,
+            restaurant: savedRestaurant,
+            message: "Comment Created",
+          });
+        });
       });
     });
-  });
 });
 
 // ============================
@@ -188,6 +215,7 @@ app.get("/reviews", verificateToken, function (req, res) {
   Review.find({ status: true })
     .skip(from)
     .limit(5)
+    .populate("owner")
     .exec((err, reviews) => {
       if (err) {
         return res.status(500).json({
@@ -230,22 +258,33 @@ app.post(
           },
         });
       }
+      if (commentDB.opened != true)
+        return res.status(500).json({
+          ok: false,
+          err: {
+            message: "That comment already reviewed",
+          },
+        });
       let review = new Review({
         description: body.description,
         owner: body.owner,
-        comment: body.comment,
       });
-      review.save((err, commentDB) => {
+      review.save((err, reviewDB) => {
         if (err) {
           return res.status(500).json({
             ok: false,
             err,
           });
         }
-        res.json({
-          ok: true,
-          comment: commentDB,
-          message: "Comment Created",
+        commentDB.opened = false;
+        commentDB.review = reviewDB._id;
+        commentDB.save((err, savedComment) => {
+          res.json({
+            ok: true,
+            comment: savedComment,
+            review: reviewDB,
+            message: "Comment Created",
+          });
         });
       });
     });

@@ -16,6 +16,10 @@ let restaurantSchema = new Schema({
     ref: "User",
     required: [true, "The owner is required"],
   },
+  comments: {
+    type: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+    default: [],
+  },
   image: {
     type: String,
     required: false,
