@@ -67,7 +67,7 @@ let verificateManage_Role = (req, res, next) => {
     return res.json({
       ok: false,
       err: {
-        message: "The user is not an owner",
+        message: "The user is not able to manage",
       },
     });
   }

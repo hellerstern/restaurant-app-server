@@ -5,11 +5,15 @@ const app = express();
 
 const Comment = require("../models/comment");
 const Restaurant = require("../models/restaurant");
+const Review = require("../models/review");
 
 const {
   verificateToken,
   verificateAdmin_Role,
+  verificateManage_Role,
 } = require("../middlewares/authentication");
+
+// =============================================================== Comment CRUD
 
 // ============================
 //  Get all comments
@@ -104,6 +108,8 @@ app.put(
       "rate",
       "title",
       "description",
+      "user",
+      "restaurant",
       "opened",
       "status",
     ]);
@@ -165,6 +171,154 @@ app.delete(
         res.json({
           ok: true,
           comment: commentDeleted,
+        });
+      }
+    );
+  }
+);
+
+// =============================================================== Review CRUD
+
+// ============================
+//  Get all reviews
+// ============================
+app.get("/reviews", verificateToken, function (req, res) {
+  let from = req.body.from || 0;
+  from = Number(from);
+  Review.find({ status: true })
+    .skip(from)
+    .limit(5)
+    .exec((err, reviews) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          err,
+        });
+      }
+      res.json({
+        ok: true,
+        reviews,
+      });
+    });
+});
+
+// ============================
+//  Create Review
+// ============================
+app.post(
+  "/reviews",
+  [verificateToken, verificateManage_Role],
+  function (req, res) {
+    let body = req.body;
+    let owner = body.owner;
+    if (req.user.role == "OWNER_ROLE") {
+      if (req.user._id != owner) {
+        return res.status(500).json({
+          ok: false,
+          err: {
+            message: "You cannot create reviews for another owners",
+          },
+        });
+      }
+    }
+    Comment.findById(body.comment).exec((err, commentDB) => {
+      if (err || !commentDB) {
+        return res.status(400).json({
+          ok: false,
+          err: {
+            message: "The comment doesn't exist with specified id",
+          },
+        });
+      }
+      let review = new Review({
+        description: body.description,
+        owner: body.owner,
+        comment: body.comment,
+      });
+      review.save((err, commentDB) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            err,
+          });
+        }
+        res.json({
+          ok: true,
+          comment: commentDB,
+          message: "Comment Created",
+        });
+      });
+    });
+  }
+);
+
+// ============================
+//  Update specified Review
+// ============================
+app.put(
+  "/reviews/:id",
+  [verificateToken, verificateAdmin_Role],
+  function (req, res) {
+    let id = req.params.id;
+    let body = _.pick(req.body, ["description", "status", "owner", "comment"]);
+    // This is a way to not update certain properties
+    // But we used underscore .pick instead
+    Review.findByIdAndUpdate(
+      id,
+      body,
+      { new: true, runValidators: true, context: "query" },
+      (err, reviewDB) => {
+        if (err) {
+          return res.status(400).json({
+            ok: false,
+            err,
+          });
+        }
+        res.json({
+          ok: true,
+          review: reviewDB,
+        });
+      }
+    );
+  }
+);
+
+// ============================
+//  Delete specified Reviews
+// ============================
+app.delete(
+  "/reviews/:id",
+  [verificateToken, verificateAdmin_Role],
+  function (req, res) {
+    let id = req.params.id;
+    // This way the user is deleted from DB
+    // Review.findByIdAndRemove(id, (err, restaurantDeleted) => {
+    // This way it just changes it status
+    let statusChange = {
+      status: false,
+    };
+    Review.findByIdAndUpdate(
+      id,
+      statusChange,
+      { new: true },
+      (err, reviewDeleted) => {
+        if (err) {
+          return res.status(400).json({
+            ok: false,
+            err,
+          });
+        }
+        if (!reviewDeleted) {
+          return res.status(400).json({
+            ok: false,
+            err: {
+              message: "Review not found",
+            },
+          });
+        }
+        res.json({
+          ok: true,
+          review: reviewDeleted,
         });
       }
     );
