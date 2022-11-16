@@ -1,7 +1,7 @@
 const express = require("express");
-const app = express();
 const _ = require("underscore");
 
+const app = express();
 const Restaurant = require("../models/restaurant");
 
 const {

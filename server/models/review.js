@@ -2,11 +2,7 @@ const mongoose = require("mongoose");
 //to create the models
 let Schema = mongoose.Schema;
 
-let restaurantSchema = new Schema({
-  name: {
-    type: String,
-    required: [true, "The name is required"],
-  },
+let reviewSchema = new Schema({
   description: {
     type: String,
     required: [true, "The description is required"],
@@ -14,11 +10,12 @@ let restaurantSchema = new Schema({
   owner: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: [true, "The owner is required"],
+    required: [true, "The owner who reviewed is required"],
   },
-  image: {
-    type: String,
-    required: false,
+  comment: {
+    type: Schema.Types.ObjectId,
+    ref: "Comment",
+    required: [true, "The comment is required"],
   },
   status: {
     type: Boolean,
@@ -27,7 +24,8 @@ let restaurantSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    required: [true, "The createdAt is required"],
   },
 });
 
-module.exports = mongoose.model("Restaurant", restaurantSchema);
+module.exports = mongoose.model("Review", reviewSchema);
