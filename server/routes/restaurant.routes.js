@@ -18,7 +18,7 @@ app.get("/restaurants", verificateToken, function (req, res) {
   from = Number(from);
   Restaurant.find({ status: true })
     .skip(from)
-    .limit(5)
+    .limit(10)
     .populate("owner")
     .populate([
       {
@@ -58,26 +58,47 @@ app.get("/restaurants", verificateToken, function (req, res) {
 // ============================
 app.get("/restaurants/:id", verificateToken, function (req, res) {
   let id = req.params.id;
-  Restaurant.findById(id).exec((err, restaurantDB) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        err,
+  Restaurant.findById(id)
+    .populate("owner")
+    .populate([
+      {
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            model: "User",
+          },
+          {
+            path: "review",
+            model: "Review",
+            populate: {
+              path: "owner",
+              model: "User",
+            },
+          },
+        ],
+      },
+    ])
+    .exec((err, restaurantDB) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          err,
+        });
+      }
+      if (!restaurantDB) {
+        return res.status(400).json({
+          ok: false,
+          err: {
+            message: "Restaurant ID doesn't exist",
+          },
+        });
+      }
+      res.json({
+        ok: true,
+        restaurant: restaurantDB,
       });
-    }
-    if (!restaurantDB) {
-      return res.status(400).json({
-        ok: false,
-        err: {
-          message: "Restaurant ID doesn't exist",
-        },
-      });
-    }
-    res.json({
-      ok: true,
-      restaurant: restaurantDB,
     });
-  });
 });
 
 // ============================
@@ -87,8 +108,86 @@ app.get(
   "/restaurants/search/owner",
   [verificateToken, verificateManage_Role],
   function (req, res) {
+    let from = req.body.from || 0;
     let owner = req.body.owner;
-    Restaurant.find({ owner: owner }).exec((err, restaurants) => {
+    Restaurant.find({ owner: owner })
+      .skip(from)
+      .limit(10)
+      .populate("owner")
+      .populate([
+        {
+          path: "comments",
+          populate: [
+            {
+              path: "user",
+              model: "User",
+            },
+            {
+              path: "review",
+              model: "Review",
+              populate: {
+                path: "owner",
+                model: "User",
+              },
+            },
+          ],
+        },
+      ])
+      .exec((err, restaurants) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            err,
+          });
+        }
+        if (!restaurants) {
+          return res.status(400).json({
+            ok: false,
+            err: {
+              message: "There is no restaurants with him",
+            },
+          });
+        }
+        res.json({
+          ok: true,
+          restaurants,
+        });
+      });
+  }
+);
+
+// ============================
+//  Search Restaurants By Rate
+// ============================
+app.get("/restaurants/search/rate", verificateToken, function (req, res) {
+  let from = req.body.from || 0;
+  let rate = req.body.rate;
+  Restaurant.find()
+    .where("normalRate")
+    .gt(rate - 1)
+    .skip(from)
+    .limit(10)
+    .populate("owner")
+    .populate([
+      {
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            model: "User",
+          },
+          {
+            path: "review",
+            model: "Review",
+            populate: {
+              path: "owner",
+              model: "User",
+            },
+          },
+        ],
+      },
+    ])
+    .exec((err, restaurants) => {
       if (err) {
         return res.status(500).json({
           ok: false,
@@ -99,7 +198,7 @@ app.get(
         return res.status(400).json({
           ok: false,
           err: {
-            message: "Restaurant ID doesn't exist",
+            message: "There is no restaurants with that rate",
           },
         });
       }
@@ -108,8 +207,7 @@ app.get(
         restaurants,
       });
     });
-  }
-);
+});
 
 // ============================
 //  Create restaurant

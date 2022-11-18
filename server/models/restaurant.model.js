@@ -20,6 +20,10 @@ let restaurantSchema = new Schema({
     type: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     default: [],
   },
+  normalRate: {
+    type: Number,
+    default: 0,
+  },
   image: {
     type: String,
     required: false,

@@ -7,9 +7,17 @@ const app = express();
 
 const bodyParser = require("body-parser");
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(
+  bodyParser.urlencoded({
+    limit: "50mb",
+    extended: true,
+    parameterLimit: 1000000,
+  })
+);
 // parse application/json
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "50mb", extended: true }));
+// cors
+app.use(require("cors")());
 
 // Enable public folder using a middleware
 app.use(express.static(path.resolve(__dirname, "../public")));

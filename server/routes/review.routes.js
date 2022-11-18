@@ -67,7 +67,26 @@ app.post("/comments", [verificateToken], function (req, res) {
   }
 
   Restaurant.findById(body.restaurant)
-    .populate("comments")
+    .populate("owner")
+    .populate([
+      {
+        path: "comments",
+        populate: [
+          {
+            path: "user",
+            model: "User",
+          },
+          {
+            path: "review",
+            model: "Review",
+            populate: {
+              path: "owner",
+              model: "User",
+            },
+          },
+        ],
+      },
+    ])
     .exec((err, restaurantDB) => {
       if (err || !restaurantDB) {
         return res.status(400).json({
@@ -77,12 +96,20 @@ app.post("/comments", [verificateToken], function (req, res) {
           },
         });
       }
+
       let found = false;
+      var totalRate = 0;
+      var totalComments = restaurantDB.comments.length;
+
       restaurantDB.comments.forEach((comment) => {
+        totalRate += comment.rate;
         if (comment.user == owner) {
           found = true;
         }
       });
+
+      console.log({ totalRate, totalComments });
+
       if (found) {
         return res.status(500).json({
           ok: false,
@@ -105,6 +132,9 @@ app.post("/comments", [verificateToken], function (req, res) {
           });
         }
         restaurantDB.comments.push(commentDB._id);
+        restaurantDB.normalRate = Math.floor(
+          (totalRate + comment.rate) / (totalComments + 1)
+        );
         restaurantDB.save((err, savedRestaurant) => {
           if (err) {
             return res.status(500).json({

@@ -8,7 +8,7 @@ const Restaurant = require("../models/restaurant.model");
 const fs = require("fs");
 const path = require("path");
 
-const { verificateToken } = require("../middlewares/authentication.middleware");
+// const { verificateToken } = require("../middlewares/authentication.middleware");
 
 // default options
 app.use(fileUpload());
@@ -19,7 +19,7 @@ app.use(fileUpload());
 //  type: user or restaurant
 //  id: user or restaurant id
 // ============================
-app.put("/upload/:type/:id", verificateToken, function (req, res) {
+app.put("/upload/:type/:id", function (req, res) {
   let type = req.params.type;
   let id = req.params.id;
 

@@ -7,6 +7,8 @@ const User = require("../models/user.model");
 
 const app = express();
 
+const { verificateToken } = require("../middlewares/authentication.middleware");
+
 // ============================
 // Login (returns user instance, auth token)
 // ============================
@@ -49,6 +51,16 @@ app.post("/login", (req, res) => {
       user: userDB,
       token,
     });
+  });
+});
+
+// ============================
+// Get current user (returns user instance)
+// ============================
+app.get("/current", verificateToken, (req, res) => {
+  res.json({
+    ok: true,
+    user: req.user,
   });
 });
 
