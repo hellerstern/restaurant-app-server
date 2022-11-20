@@ -16,13 +16,10 @@ const app = express();
 app.get("/user", [verificateToken, verificateAdmin_Role], (req, res) => {
   let from = req.body.from || 0;
   from = Number(from);
-  let limit = req.body.limit || 5;
-  limit = Number(limit);
 
   // get currently enabled users: represented by status field value true
   User.find({ status: true })
     .skip(from)
-    .limit(limit)
     .exec((err, users) => {
       if (err) {
         return res.status(400).json({
@@ -47,6 +44,40 @@ app.get("/user", [verificateToken, verificateAdmin_Role], (req, res) => {
       });
     });
 });
+
+// ============================
+//  Get specified user
+// ============================
+app.get(
+  "/user/:id",
+  [verificateToken, verificateAdmin_Role],
+  function (req, res) {
+    let id = req.params.id;
+    User.findById(id)
+      .where("status")
+      .equals(true)
+      .exec((err, userDB) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            err,
+          });
+        }
+        if (!userDB) {
+          return res.status(400).json({
+            ok: false,
+            err: {
+              message: "User with ID doesn't exist",
+            },
+          });
+        }
+        res.json({
+          ok: true,
+          user: userDB,
+        });
+      });
+  }
+);
 
 // ============================
 // Create New User: All users will use this api to register

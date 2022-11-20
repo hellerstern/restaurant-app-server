@@ -23,9 +23,16 @@ app.get("/comments", verificateToken, function (req, res) {
   from = Number(from);
   Comment.find({ status: true })
     .skip(from)
-    .limit(5)
-    .populate("user")
-    .populate("review")
+    .populate([
+      {
+        path: "user",
+        match: { status: true },
+      },
+      {
+        path: "review",
+        match: { status: true },
+      },
+    ])
     .exec((err, comments) => {
       if (err) {
         return res.status(500).json({
@@ -36,6 +43,46 @@ app.get("/comments", verificateToken, function (req, res) {
       res.json({
         ok: true,
         comments,
+      });
+    });
+});
+
+// ============================
+//  Get specified comment
+// ============================
+app.get("/comments/:id", verificateToken, function (req, res) {
+  let id = req.params.id;
+  Comment.findById(id)
+    .populate([
+      {
+        path: "user",
+        match: { status: true },
+      },
+      {
+        path: "review",
+        match: { status: true },
+      },
+    ])
+    .where("status")
+    .equals(true)
+    .exec((err, commentDB) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          err,
+        });
+      }
+      if (!commentDB) {
+        return res.status(400).json({
+          ok: false,
+          err: {
+            message: "Comment with that ID doesn't exist",
+          },
+        });
+      }
+      res.json({
+        ok: true,
+        comment: commentDB,
       });
     });
 });
@@ -67,21 +114,28 @@ app.post("/comments", [verificateToken], function (req, res) {
   }
 
   Restaurant.findById(body.restaurant)
-    .populate("owner")
     .populate([
       {
+        path: "owner",
+        match: { status: true },
+      },
+      {
         path: "comments",
+        match: { status: true },
         populate: [
           {
             path: "user",
             model: "User",
+            match: { status: true },
           },
           {
             path: "review",
             model: "Review",
+            match: { status: true },
             populate: {
               path: "owner",
               model: "User",
+              match: { status: true },
             },
           },
         ],
@@ -166,7 +220,6 @@ app.put(
       "title",
       "description",
       "user",
-      "restaurant",
       "opened",
       "status",
     ]);
@@ -244,7 +297,6 @@ app.get("/reviews", verificateToken, function (req, res) {
   from = Number(from);
   Review.find({ status: true })
     .skip(from)
-    .limit(5)
     .populate("owner")
     .exec((err, reviews) => {
       if (err) {
@@ -360,6 +412,7 @@ app.delete(
   [verificateToken, verificateAdmin_Role],
   function (req, res) {
     let id = req.params.id;
+    const commentId = req.query.comment;
     // This way the user is deleted from DB
     // Review.findByIdAndRemove(id, (err, restaurantDeleted) => {
     // This way it just changes it status
@@ -385,10 +438,24 @@ app.delete(
             },
           });
         }
-        res.json({
-          ok: true,
-          review: reviewDeleted,
-        });
+        Comment.findByIdAndUpdate(
+          commentId,
+          { opened: true },
+          { new: true },
+          (err, commentUpdated) => {
+            if (err) {
+              return res.status(400).json({
+                ok: false,
+                err,
+              });
+            }
+            res.json({
+              ok: true,
+              review: reviewDeleted,
+              comment: commentUpdated,
+            });
+          }
+        );
       }
     );
   }

@@ -14,26 +14,34 @@ const {
 //  Get all restaurants
 // ============================
 app.get("/restaurants", verificateToken, function (req, res) {
-  let from = req.body.from || 0;
+  let from = req.query.from || 0;
   from = Number(from);
   Restaurant.find({ status: true })
+    .where("status")
+    .equals(true)
     .skip(from)
-    .limit(10)
-    .populate("owner")
     .populate([
       {
+        path: "owner",
+        match: { status: true },
+      },
+      {
         path: "comments",
+        match: { status: true },
         populate: [
           {
             path: "user",
             model: "User",
+            match: { status: true },
           },
           {
             path: "review",
             model: "Review",
+            match: { status: true },
             populate: {
               path: "owner",
               model: "User",
+              match: { status: true },
             },
           },
         ],
@@ -59,21 +67,28 @@ app.get("/restaurants", verificateToken, function (req, res) {
 app.get("/restaurants/:id", verificateToken, function (req, res) {
   let id = req.params.id;
   Restaurant.findById(id)
-    .populate("owner")
     .populate([
       {
+        path: "owner",
+        match: { status: true },
+      },
+      {
         path: "comments",
+        match: { status: true },
         populate: [
           {
             path: "user",
             model: "User",
+            match: { status: true },
           },
           {
             path: "review",
             model: "Review",
+            match: { status: true },
             populate: {
               path: "owner",
               model: "User",
+              match: { status: true },
             },
           },
         ],
@@ -108,26 +123,99 @@ app.get(
   "/restaurants/search/owner",
   [verificateToken, verificateManage_Role],
   function (req, res) {
-    let from = req.body.from || 0;
-    let owner = req.body.owner;
+    let from = req.query.from || 0;
+    from = Number(from);
+    let owner = req.query.owner;
     Restaurant.find({ owner: owner })
+      .where("status")
+      .equals(true)
       .skip(from)
-      .limit(10)
-      .populate("owner")
       .populate([
         {
+          path: "owner",
+          match: { status: true },
+        },
+        {
           path: "comments",
+          match: { status: true },
           populate: [
             {
               path: "user",
               model: "User",
+              match: { status: true },
             },
             {
               path: "review",
               model: "Review",
+              match: { status: true },
               populate: {
                 path: "owner",
                 model: "User",
+                match: { status: true },
+              },
+            },
+          ],
+        },
+      ])
+      .exec((err, restaurants) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            err,
+          });
+        }
+        if (!restaurants) {
+          return res.status(400).json({
+            ok: false,
+            err: {
+              message: "There is no restaurants with him",
+            },
+          });
+        }
+        res.json({
+          ok: true,
+          restaurants,
+        });
+      });
+  }
+);
+
+// ============================
+//  Search Restaurant By Owner with waiting reply comments
+// ============================
+app.get(
+  "/restaurants/search/waiting-reply",
+  [verificateToken, verificateManage_Role],
+  function (req, res) {
+    let from = req.query.from || 0;
+    from = Number(from);
+    let owner = req.query.owner;
+    Restaurant.find({ owner: owner })
+      .where("status")
+      .equals(true)
+      .skip(from)
+      .populate([
+        {
+          path: "owner",
+          match: { status: true },
+        },
+        {
+          path: "comments",
+          match: { status: true, opened: true },
+          populate: [
+            {
+              path: "user",
+              model: "User",
+              match: { status: true },
+            },
+            {
+              path: "review",
+              model: "Review",
+              match: { status: true },
+              populate: {
+                path: "owner",
+                model: "User",
+                match: { status: true },
               },
             },
           ],
@@ -160,28 +248,38 @@ app.get(
 //  Search Restaurants By Rate
 // ============================
 app.get("/restaurants/search/rate", verificateToken, function (req, res) {
-  let from = req.body.from || 0;
-  let rate = req.body.rate;
+  let from = req.query.from || 0;
+  from = Number(from);
+  let rate = req.query.rate;
+  rate = Number(rate);
   Restaurant.find()
     .where("normalRate")
     .gt(rate - 1)
+    .where("status")
+    .equals(true)
     .skip(from)
-    .limit(10)
-    .populate("owner")
     .populate([
       {
+        path: "owner",
+        match: { status: true },
+      },
+      {
         path: "comments",
+        match: { status: true },
         populate: [
           {
             path: "user",
             model: "User",
+            match: { status: true },
           },
           {
             path: "review",
             model: "Review",
+            match: { status: true },
             populate: {
               path: "owner",
               model: "User",
+              match: { status: true },
             },
           },
         ],

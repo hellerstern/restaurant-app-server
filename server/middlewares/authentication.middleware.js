@@ -10,11 +10,13 @@ let verificateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.SEED, (err, decoded) => {
     if (err) {
+      console.log(err);
       return res.status(401).json({
         ok: false,
         err: {
           message: "Token not valid",
         },
+        type: "token_invalid",
       });
     }
     req.user = decoded.user;
