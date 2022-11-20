@@ -24,7 +24,8 @@ process.env.SEED = process.env.SEED || "dev-secret-seed";
 // ============================
 let urlDB;
 if (process.env.NODE_ENV === "dev") {
-  urlDB = "mongodb://localhost:27017/restaurant";
+  urlDB =
+    "mongodb+srv://robin:robin@cluster0.zksqaj9.mongodb.net/?retryWrites=true&w=majority";
 } else {
   urlDB = process.env.MONGO_URI;
 }
